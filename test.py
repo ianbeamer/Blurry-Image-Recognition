@@ -134,6 +134,8 @@ def main(_):
   correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
+
+#Use for a quick training session, against unblurred images
   with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     for i in range(20000):
@@ -145,6 +147,47 @@ def main(_):
     for j in range(100):
       mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
       print('test accuracy with sigma: ' + str(j) + ' %g' % accuracy.eval(feed_dict={x: gaussian_filter(mnist.test.images, j), y_: mnist.test.labels, keep_prob: 1.0}))
+
+
+#training with blurred images, can take a while to run
+"""
+  with tf.Session() as sess:
+    sess.run(tf.global_variables_initializer())
+    for j in range(100):    #CHANGE ME FOR SHORTER RUN TIMES
+      mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
+      for k in range(20000):  
+        gaussian_filter(mnist.train.images[k], j)
+      for i in range(20000):
+        batch = mnist.train.next_batch(50)
+        if i % 100 == 0:
+          train_accuracy = accuracy.eval(feed_dict={
+              x: batch[0], y_: batch[1], keep_prob: 1.0})
+          print('step %d, training accuracy %g' % (i, train_accuracy))
+        train_step.run(feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.5})
+      print('test accuracy on blur level ' + str(j) + ': %g' % accuracy.eval(feed_dict={
+        x: gaussian_filter(mnist.test.images, j), y_: mnist.test.labels, keep_prob: 1.0}))
+"""
+
+#training on blurred images, alternative setup
+"""
+with tf.Session() as sess:
+    sess.run(tf.global_variables_initializer())
+    for j in range(100):    #CHANGE ME FOR SHORTER RUN TIMES
+      mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
+      for k in range(10000):
+        gaussian_filter(mnist.test.images[k], j)
+      for k in range(20000):  
+        gaussian_filter(mnist.train.images[k], j)
+      for i in range(20000):
+        batch = mnist.train.next_batch(50)
+        if i % 100 == 0:
+          train_accuracy = accuracy.eval(feed_dict={
+              x: batch[0], y_: batch[1], keep_prob: 1.0})
+          print('step %d, training accuracy %g' % (i, train_accuracy))
+        train_step.run(feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.5})
+      print('test accuracy on blur level ' + str(j) + ': %g' % accuracy.eval(feed_dict={
+        x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))
+"""
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
